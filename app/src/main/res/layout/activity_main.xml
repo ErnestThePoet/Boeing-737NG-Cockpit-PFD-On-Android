@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    android:paddingTop="30dp"
+    android:keepScreenOn="true"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/ivASI"
+        android:src="@drawable/top"/>
+
+    <ImageView
+        android:id="@+id/ivASI"
+        android:background="#5f5656"
+        android:layout_width="wrap_content"
+        android:layout_height="260dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/asi"
+        android:scaleType="matrix"/>
+
+    <ImageView
+        android:id="@+id/ivAsTrendUp"
+        android:layout_width="wrap_content"
+        android:layout_height="120dp"
+        android:layout_alignRight="@id/ivASI"
+        android:layout_marginRight="4dp"
+        android:layout_marginTop="24dp"
+        android:src="@drawable/as_trend_vec_up"
+        android:scaleType="matrix"/>
+
+    <ImageView
+        android:id="@+id/ivAsTrendDown"
+        android:layout_width="wrap_content"
+        android:layout_height="120dp"
+        android:layout_below="@id/ivAsTrendUp"
+        android:layout_alignRight="@id/ivASI"
+        android:layout_marginRight="4dp"
+        android:src="@drawable/as_trend_vec_down"
+        android:scaleType="matrix"/>
+
+    <ImageView
+        android:id="@+id/ivCurrentAirspeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/rlHSI"
+        android:layout_alignRight="@id/ivASI"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="72dp"
+        android:src="@drawable/curr_as"
+        android:scaleType="center"/>
+
+    <TextView
+        android:id="@+id/tvCurrentAirspeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/ivCurrentAirspeed"
+        android:layout_alignRight="@id/ivASI"
+        android:layout_marginRight="21dp"
+        android:layout_marginTop="6dp"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:text="0"/>
+
+    <RelativeLayout
+        android:id="@+id/rlHSI"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/ivASI"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="50dp">
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cvHSIBackground"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            app:cardElevation="0dp"
+            app:cardCornerRadius="30dp">
+
+            <ImageView
+                android:id="@+id/ivHSI"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/hsi_background"
+                android:src="@drawable/pfd_bkg"
+                android:scaleType="matrix"/>
+
+        </androidx.cardview.widget.CardView>
+
+        <ImageView
+            android:id="@+id/ivBankPointer"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/bank_pointer"/>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/bank_scale"/>
+
+        <ImageView
+            android:id="@+id/ivApSym"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="90dp"
+            android:src="@drawable/ap_sym"/>
+
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/ivCompass"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/rlHSI"
+        android:layout_alignLeft="@id/rlHSI"
+        android:layout_marginTop="40dp"
+        android:src="@drawable/compass"/>
+
+    <TextView
+        android:id="@+id/tvHeading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/ivCompass"
+        android:layout_alignLeft="@id/ivCompass"
+        android:layout_marginLeft="51dp"
+        android:layout_marginTop="25dp"
+        android:textColor="#f790f7"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:text="0"/>
+
+    <ImageView
+        android:id="@+id/ivAlt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/rlHSI"
+        android:layout_alignTop="@id/ivASI"
+        android:src="@drawable/alt"/>
+
+    <TextView
+        android:id="@+id/tvCurrentAlt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/ivAlt"
+        android:layout_alignLeft="@id/ivAlt"
+        android:layout_marginLeft="42dp"
+        android:layout_marginTop="108dp"
+        android:textColor="@color/white"
+        android:textSize="19sp"
+        android:text="0"/>
+
+    <TextView
+        android:id="@+id/tvInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ivCompass"
+        android:layout_marginTop="30dp"
+        android:textColor="@color/white"/>
+
+<!--    <EditText-->
+<!--        android:id="@+id/etRot"-->
+<!--        android:background="@color/white"-->
+<!--        android:layout_width="50dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:inputType="numberSigned"-->
+<!--        android:textSize="20sp"-->
+<!--        android:text="30"/>-->
+<!--    <EditText-->
+<!--        android:id="@+id/etRotX"-->
+<!--        android:layout_toEndOf="@id/etRot"-->
+<!--        android:layout_width="50dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:inputType="numberSigned"-->
+<!--        android:textSize="20sp"-->
+<!--        android:text="1199"/>-->
+
+<!--    <EditText-->
+<!--        android:id="@+id/etRotY"-->
+<!--        android:layout_toEndOf="@id/etRotX"-->
+<!--        android:layout_width="50dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:inputType="numberSigned"-->
+<!--        android:textSize="20sp"-->
+<!--        android:text="1199"/>-->
+
+<!--    <EditText-->
+<!--        android:id="@+id/etTransX"-->
+<!--        android:layout_toEndOf="@id/etRotY"-->
+<!--        android:layout_width="50dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:inputType="numberSigned"-->
+<!--        android:textSize="20sp"-->
+<!--        android:text="-935"/>-->
+
+<!--    <EditText-->
+<!--        android:id="@+id/etTransY"-->
+<!--        android:layout_toEndOf="@id/etTransX"-->
+<!--        android:layout_width="50dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:inputType="numberSigned"-->
+<!--        android:textSize="20sp"-->
+<!--        android:text="-935"/>-->
+
+</RelativeLayout>
