@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private final float[] orientationAngles = new float[3];
 
-    private static final int SW_SIZE=8;
+    private static final int SW_SIZE=10;
     private final SWFilter accFilter=new SWFilter(SW_SIZE);
     private final SWFilter[] orientationFilters={
             new SWFilter(SW_SIZE),
@@ -148,21 +148,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             System.arraycopy(event.values, 0, magnetometerReading,
                     0, magnetometerReading.length);
         }
-    }
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-    }
-
-    private void updatePFDDisplay() {
         updateOrientationAngles();
-
         filterValues();
-
-        updateHSIDisplay();
-        updateASTrendVector();
-        updateHeadingDisplay();
-        updateAltitudeAndSpeedDisplay();
     }
 
     private void updateOrientationAngles() {
@@ -181,6 +169,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     this.orientationAngles[i]
             );
         }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    }
+
+    private void updatePFDDisplay() {
+        updateHSIDisplay();
+        updateASTrendVector();
+        updateHeadingDisplay();
+        updateAltitudeAndSpeedDisplay();
     }
 
     private void updateHSIDisplay() {
