@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private final float[] orientationAngles = new float[3];
 
-    private static final int SW_SIZE=10;
+    private static final int SW_SIZE=16;
     private final SWFilter accFilter=new SWFilter(SW_SIZE);
     private final SWFilter[] orientationFilters={
             new SWFilter(SW_SIZE),
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     }
                 });
             }
-        }, 0, 50);
+        }, 0, 33);
     }
 
     @Override
