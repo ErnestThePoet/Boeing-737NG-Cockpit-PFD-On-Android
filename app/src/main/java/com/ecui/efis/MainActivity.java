@@ -27,6 +27,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SensorManager sensorManager;
 
+    private Sensor gyroSensor;
+
     private final LocationHelper locationHelper = new LocationHelper(this);
 
     private final Matrix HSIMatrix = new Matrix();
@@ -85,11 +87,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         swAttSource.setOnCheckedChangeListener(
                 (e, c) -> {
-                    attSource = c ? AttSource.ACC : AttSource.GYRO;
-
                     if (c) {
+                        attSource = AttSource.ACC;
                         orientationFilters[1].clear();
                         orientationFilters[2].clear();
+                        sensorManager.unregisterListener(this, gyroSensor);
+                    } else {
+                        attSource = AttSource.GYRO;
+                        registerGyroListener();
                     }
                 });
 
@@ -129,6 +134,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }, 0, 33);
     }
 
+    private void registerGyroListener(){
+        sensorManager.registerListener(
+                this, gyroSensor, SensorManager.SENSOR_DELAY_NORMAL,
+                SensorManager.SENSOR_DELAY_FASTEST);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -140,11 +151,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     SensorManager.SENSOR_DELAY_GAME);
         }
 
-        Sensor gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         if (gyroSensor != null) {
-            sensorManager.registerListener(
-                    this, gyroSensor, SensorManager.SENSOR_DELAY_NORMAL,
-                    SensorManager.SENSOR_DELAY_FASTEST);
+            registerGyroListener();
         }
 
         Sensor magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
