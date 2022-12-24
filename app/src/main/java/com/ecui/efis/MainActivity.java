@@ -1,6 +1,7 @@
 package com.ecui.efis;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
@@ -13,6 +14,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -25,12 +27,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private SensorManager sensorManager;
 
-    private final LocationHelper locationHelper=new LocationHelper(this);
-
-    private final float[] rotationMatrix = new float[9];
+    private final LocationHelper locationHelper = new LocationHelper(this);
 
     private final Matrix HSIMatrix = new Matrix();
     private final Matrix ASIMatrix = new Matrix();
+
+    private AttSource attSource = AttSource.GYRO;
+
+    private long previousTimeGyroNs = System.nanoTime();
 
     private final float[] magnetometerReading = new float[3];
 
@@ -39,9 +43,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private final float[] orientationAngles = new float[3];
 
-    private static final int SW_SIZE=16;
-    private final SWFilter accFilter=new SWFilter(SW_SIZE);
-    private final SWFilter[] orientationFilters={
+    private static final int SW_SIZE = 16;
+    private final SWFilter accFilter = new SWFilter(SW_SIZE);
+    private final SWFilter[] orientationFilters = {
             new SWFilter(SW_SIZE),
             new SWFilter(SW_SIZE),
             new SWFilter(SW_SIZE)
@@ -54,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private ImageView ivHSI, ivBankPointer, ivASI, ivAsTrendUp, ivAsTrendDown;
     private TextView tvCurrentAirspeed, tvHeading, tvCurrentAlt, tvInfo;
 
-    private boolean isTvInfoShow=false;
+    private boolean isTvInfoShow = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,13 +77,29 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         tvCurrentAlt = findViewById(R.id.tvCurrentAlt);
         tvInfo = findViewById(R.id.tvInfo);
 
-        ivHSI.setOnClickListener(v -> runOnUiThread(() -> isTvInfoShow=!isTvInfoShow));
+        SwitchCompat swAttSource = findViewById(R.id.swAttSource);
+        Button btnResetAtt = findViewById(R.id.btnResetAtt);
+
+        ivHSI.setOnClickListener(
+                e -> runOnUiThread(() -> isTvInfoShow = !isTvInfoShow));
+
+        swAttSource.setOnCheckedChangeListener(
+                (e, c) -> {
+                    attSource = c ? AttSource.ACC : AttSource.GYRO;
+
+                    if (c) {
+                        orientationFilters[1].clear();
+                        orientationFilters[2].clear();
+                    }
+                });
+
+        btnResetAtt.setOnClickListener(e -> resetAttitude());
 
         if (ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            String[] permissions={Manifest.permission.ACCESS_FINE_LOCATION};
-            ActivityCompat.requestPermissions(this,permissions,123);
+            String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION};
+            ActivityCompat.requestPermissions(this, permissions, 123);
         }
 
         new Timer().schedule(new TimerTask() {
@@ -88,21 +108,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 runOnUiThread(() -> {
                     updatePFDDisplay();
 
-                    if(isTvInfoShow){
+                    if (isTvInfoShow) {
                         tvInfo.setText(String.format(
                                 "SPD:%.3fMPS(%.3fKPH)\nACC:%.3fm/s/s(%.3fkm/h/s)\nALT:%"
                                         + ".3fm\nAOA:%.1f%c\nBANK ANGLE:%.1f%c",
                                 speedMps,
-                                3.6*speedMps,
+                                3.6 * speedMps,
                                 accelerometerReading[1],
-                                3.6*accelerometerReading[1],
+                                3.6 * accelerometerReading[1],
                                 altMeters,
                                 Math.toDegrees(Math.abs(orientationAngles[1])),
-                                orientationAngles[1]<=0?'U':'D',
+                                orientationAngles[1] <= 0 ? 'U' : 'D',
                                 Math.toDegrees(Math.abs(orientationAngles[2])),
-                                orientationAngles[2]<=0?'L':'R'));
-                    }
-                    else{
+                                orientationAngles[2] <= 0 ? 'L' : 'R'));
+                    } else {
                         tvInfo.setText("");
                     }
                 });
@@ -118,13 +137,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (accelerometer != null) {
             sensorManager.registerListener(
                     this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL,
-                    SensorManager.SENSOR_DELAY_UI);
+                    SensorManager.SENSOR_DELAY_GAME);
+        }
+
+        Sensor gyroSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        if (gyroSensor != null) {
+            sensorManager.registerListener(
+                    this, gyroSensor, SensorManager.SENSOR_DELAY_NORMAL,
+                    SensorManager.SENSOR_DELAY_FASTEST);
         }
 
         Sensor magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         if (magneticField != null) {
-            sensorManager.registerListener(this, magneticField,
-                    SensorManager.SENSOR_DELAY_NORMAL, SensorManager.SENSOR_DELAY_UI);
+            sensorManager.registerListener(
+                    this, magneticField, SensorManager.SENSOR_DELAY_NORMAL,
+                    SensorManager.SENSOR_DELAY_GAME);
         }
     }
 
@@ -137,35 +164,64 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER
+                && attSource == AttSource.ACC) {
             System.arraycopy(
                     event.values,
                     0,
                     accelerometerReading,
                     0,
                     accelerometerReading.length);
+        } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE
+                && attSource == AttSource.GYRO) {
+            long currentTimeGyroNs = System.nanoTime();
+            double dtNs = currentTimeGyroNs - previousTimeGyroNs;
+
+            orientationAngles[1] -= (dtNs * event.values[0]) / 1e9;
+            orientationAngles[2] += (dtNs * event.values[1]) / 1e9;
+
+            previousTimeGyroNs = currentTimeGyroNs;
         } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
             System.arraycopy(event.values, 0, magnetometerReading,
                     0, magnetometerReading.length);
         }
 
-        updateOrientationAngles();
-        filterValues();
+        updateOrientationAngles(attSource == AttSource.GYRO);
+        if (attSource == AttSource.ACC) {
+            filterValues();
+        }
     }
 
-    private void updateOrientationAngles() {
+    private void resetAttitude() {
+        if (attSource == AttSource.GYRO) {
+            orientationAngles[1] = 0.0f;
+            orientationAngles[2] = 0.0f;
+        }
+    }
+
+    private void updateOrientationAngles(boolean headingOnly) {
+        float[] rotationMatrix = new float[9];
+
         SensorManager.getRotationMatrix(
                 rotationMatrix, null, accelerometerReading, magnetometerReading);
 
-        SensorManager.getOrientation(rotationMatrix, orientationAngles);
+        float[] calculatedOrientationAngles = new float[3];
+        SensorManager.getOrientation(rotationMatrix, calculatedOrientationAngles);
+
+        if (headingOnly) {
+            orientationAngles[0] = calculatedOrientationAngles[0];
+        } else {
+            System.arraycopy(calculatedOrientationAngles, 0,
+                    orientationAngles, 0, calculatedOrientationAngles.length);
+        }
     }
 
     // speed and alt are not filtered.
-    private void filterValues(){
-        this.accelerometerReading[1]=this.accFilter.filter(this.accelerometerReading[1]);
+    private void filterValues() {
+        this.accelerometerReading[1] = this.accFilter.filter(this.accelerometerReading[1]);
 
-        for(int i=0;i<this.orientationAngles.length;i++){
-            this.orientationAngles[i]=this.orientationFilters[i].filter(
+        for (int i = 0; i < this.orientationAngles.length; i++) {
+            this.orientationAngles[i] = this.orientationFilters[i].filter(
                     this.orientationAngles[i]
             );
         }
@@ -229,19 +285,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float currentHeadingDegrees = (float) Math.toDegrees(orientationAngles[0]);
         if (currentHeadingDegrees < 0) {
             currentHeadingDegrees = 360 + currentHeadingDegrees;
-            if(currentHeadingDegrees==360){
-                currentHeadingDegrees=0;
+            if (currentHeadingDegrees == 360) {
+                currentHeadingDegrees = 0;
             }
         }
         tvHeading.setText(decimalFormat.format(currentHeadingDegrees));
     }
 
-    private void updateAltitudeAndSpeedDisplay(){
-        altMeters=locationHelper.getLocation().getAltitude();
-        speedMps=locationHelper.getLocation().getSpeed();
+    private void updateAltitudeAndSpeedDisplay() {
+        altMeters = locationHelper.getLocation().getAltitude();
+        speedMps = locationHelper.getLocation().getSpeed();
 
-        tvCurrentAlt.setText(String.valueOf(Math.round(3.28084*altMeters)));
-        float speedKts= (float) (1.944012*speedMps);
+        tvCurrentAlt.setText(String.valueOf(Math.round(3.28084 * altMeters)));
+        float speedKts = (float) (1.944012 * speedMps);
         tvCurrentAirspeed.setText(String.valueOf(Math.round(speedKts)));
 
         ASIMatrix.setTranslate(0,
