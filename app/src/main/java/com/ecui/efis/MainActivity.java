@@ -134,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }, 0, 33);
     }
 
-    private void registerGyroListener(){
+    private void registerGyroListener() {
         sensorManager.registerListener(
                 this, gyroSensor, SensorManager.SENSOR_DELAY_NORMAL,
                 SensorManager.SENSOR_DELAY_FASTEST);
@@ -173,8 +173,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER
-                && attSource == AttSource.ACC) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             System.arraycopy(
                     event.values,
                     0,
@@ -195,10 +194,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     0, magnetometerReading.length);
         }
 
-        updateOrientationAngles(attSource == AttSource.GYRO);
-        if (attSource == AttSource.ACC) {
-            filterValues();
-        }
+        updateOrientationAngles();
+        filterValues();
     }
 
     private void resetAttitude() {
@@ -208,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    private void updateOrientationAngles(boolean headingOnly) {
+    private void updateOrientationAngles() {
         float[] rotationMatrix = new float[9];
 
         SensorManager.getRotationMatrix(
@@ -217,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float[] calculatedOrientationAngles = new float[3];
         SensorManager.getOrientation(rotationMatrix, calculatedOrientationAngles);
 
-        if (headingOnly) {
+        if (attSource == AttSource.GYRO) {
             orientationAngles[0] = calculatedOrientationAngles[0];
         } else {
             System.arraycopy(calculatedOrientationAngles, 0,
@@ -229,10 +226,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void filterValues() {
         this.accelerometerReading[1] = this.accFilter.filter(this.accelerometerReading[1]);
 
-        for (int i = 0; i < this.orientationAngles.length; i++) {
-            this.orientationAngles[i] = this.orientationFilters[i].filter(
-                    this.orientationAngles[i]
-            );
+        if (attSource == AttSource.ACC) {
+            for (int i = 0; i < this.orientationAngles.length; i++) {
+                this.orientationAngles[i] = this.orientationFilters[i].filter(
+                        this.orientationAngles[i]
+                );
+            }
         }
     }
 
