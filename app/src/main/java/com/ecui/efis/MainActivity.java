@@ -92,9 +92,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         orientationFilters[1].clear();
                         orientationFilters[2].clear();
                         sensorManager.unregisterListener(this, gyroSensor);
+                        btnResetAtt.setEnabled(false);
                     } else {
                         attSource = AttSource.GYRO;
                         registerGyroListener();
+                        btnResetAtt.setEnabled(true);
                     }
                 });
 
