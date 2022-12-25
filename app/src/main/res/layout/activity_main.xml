@@ -150,7 +150,7 @@
         android:layout_height="wrap_content"
         android:layout_alignLeft="@id/ivAlt"
         android:layout_alignTop="@id/ivAlt"
-        android:layout_marginLeft="42dp"
+        android:layout_marginLeft="29.7dp"
         android:layout_marginTop="108dp"
         android:text="0"
         android:textColor="@color/white"
