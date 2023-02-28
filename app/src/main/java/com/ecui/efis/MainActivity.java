@@ -35,8 +35,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private final Matrix ASIMatrix = new Matrix();
 
     private AttSource attSource = AttSource.GYRO;
+    private boolean isIrsSpd = false;
+
+    private boolean isAccFirstUpdate = true;
+    private boolean isGyroFirstUpdate = true;
 
     private long previousTimeGyroNs = System.nanoTime();
+    private long previousTimeAccNs = System.nanoTime();
+
+    private float previousGpsSpeedMps;
 
     private final float[] magnetometerReading = new float[3];
 
@@ -80,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         tvInfo = findViewById(R.id.tvInfo);
 
         SwitchCompat swAttSource = findViewById(R.id.swAttSource);
+        SwitchCompat swIrsSpd = findViewById(R.id.swIrsSpd);
         Button btnResetAtt = findViewById(R.id.btnShowInfo);
 
         ivHSI.setOnClickListener(e -> resetAttitude());
@@ -91,9 +99,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         orientationFilters[1].clear();
                         orientationFilters[2].clear();
                         sensorManager.unregisterListener(this, gyroSensor);
+                        isGyroFirstUpdate = true;
                     } else {
                         attSource = AttSource.GYRO;
                         registerGyroListener();
+                    }
+                });
+
+        swIrsSpd.setOnCheckedChangeListener(
+                (e, c) -> {
+                    isIrsSpd = c;
+                    if (!c) {
+                        isAccFirstUpdate = true;
                     }
                 });
 
@@ -180,13 +197,31 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     accelerometerReading,
                     0,
                     accelerometerReading.length);
+
+            if (isIrsSpd) {
+                long currentTimeAccNs = System.nanoTime();
+
+                if (isAccFirstUpdate) {
+                    isAccFirstUpdate = false;
+                } else {
+                    double dtNs = currentTimeAccNs - previousTimeAccNs;
+                    speedMps += (dtNs * accelerometerReading[1]) / 1e9;
+                }
+
+                previousTimeAccNs = currentTimeAccNs;
+            }
         } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE
                 && attSource == AttSource.GYRO) {
             long currentTimeGyroNs = System.nanoTime();
-            double dtNs = currentTimeGyroNs - previousTimeGyroNs;
 
-            orientationAngles[1] -= (dtNs * event.values[0]) / 1e9;
-            orientationAngles[2] += (dtNs * event.values[1]) / 1e9;
+            if (isGyroFirstUpdate) {
+                isGyroFirstUpdate = false;
+            } else {
+                double dtNs = currentTimeGyroNs - previousTimeGyroNs;
+
+                orientationAngles[1] -= (dtNs * event.values[0]) / 1e9;
+                orientationAngles[2] += (dtNs * event.values[1]) / 1e9;
+            }
 
             previousTimeGyroNs = currentTimeGyroNs;
         } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
@@ -302,7 +337,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void updateAltitudeAndSpeedDisplay() {
         altMeters = locationHelper.getLocation().getAltitude();
-        speedMps = locationHelper.getLocation().getSpeed();
+        float currentGpsSpeedMps = locationHelper.getLocation().getSpeed();
+
+        if (Math.abs(currentGpsSpeedMps - previousGpsSpeedMps) > 1e-3) {
+            speedMps = currentGpsSpeedMps;
+            previousGpsSpeedMps = currentGpsSpeedMps;
+        }
 
         tvCurrentAlt.setText(String.valueOf(Math.round(3.28084 * altMeters)));
         float speedKts = (float) (1.944012 * speedMps);
