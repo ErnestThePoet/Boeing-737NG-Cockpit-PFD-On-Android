@@ -80,10 +80,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         tvInfo = findViewById(R.id.tvInfo);
 
         SwitchCompat swAttSource = findViewById(R.id.swAttSource);
-        Button btnResetAtt = findViewById(R.id.btnResetAtt);
+        Button btnResetAtt = findViewById(R.id.btnShowInfo);
 
-        ivHSI.setOnClickListener(
-                e -> runOnUiThread(() -> isTvInfoShow = !isTvInfoShow));
+        ivHSI.setOnClickListener(e -> resetAttitude());
 
         swAttSource.setOnCheckedChangeListener(
                 (e, c) -> {
@@ -92,15 +91,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         orientationFilters[1].clear();
                         orientationFilters[2].clear();
                         sensorManager.unregisterListener(this, gyroSensor);
-                        btnResetAtt.setEnabled(false);
                     } else {
                         attSource = AttSource.GYRO;
                         registerGyroListener();
-                        btnResetAtt.setEnabled(true);
                     }
                 });
 
-        btnResetAtt.setOnClickListener(e -> resetAttitude());
+        btnResetAtt.setOnClickListener(
+                e -> runOnUiThread(() -> isTvInfoShow = !isTvInfoShow));
 
         if (ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION)

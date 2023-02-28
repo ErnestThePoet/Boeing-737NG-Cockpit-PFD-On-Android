@@ -207,10 +207,10 @@
             android:orientation="vertical">
 
             <Button
-                android:id="@+id/btnResetAtt"
+                android:id="@+id/btnShowInfo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="GYRO ATT RST" />
+                android:text="TOGGLE INFO" />
         </LinearLayout>
     </LinearLayout>
 
