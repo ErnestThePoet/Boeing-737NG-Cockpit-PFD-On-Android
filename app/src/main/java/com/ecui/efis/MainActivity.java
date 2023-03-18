@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SwitchCompat swAttSource = findViewById(R.id.swAttSource);
         SwitchCompat swGpsSpd = findViewById(R.id.swGpsSpd);
         SwitchCompat swIrsSpd = findViewById(R.id.swIrsSpd);
-        Button btnResetAtt = findViewById(R.id.btnShowInfo);
+        Button btnShowInfo = findViewById(R.id.btnShowInfo);
 
         ivHSI.setOnClickListener(e -> resetAttitude());
 
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     }
                 });
 
-        btnResetAtt.setOnClickListener(
+        btnShowInfo.setOnClickListener(
                 e -> runOnUiThread(() -> isTvInfoShow = !isTvInfoShow));
 
         if (ActivityCompat.checkSelfPermission(
