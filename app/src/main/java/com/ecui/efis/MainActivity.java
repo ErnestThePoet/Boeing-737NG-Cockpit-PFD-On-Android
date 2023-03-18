@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SwitchCompat swGpsSpd = findViewById(R.id.swGpsSpd);
         SwitchCompat swIrsSpd = findViewById(R.id.swIrsSpd);
         Button btnShowInfo = findViewById(R.id.btnShowInfo);
+        ImageView ivAsi = findViewById(R.id.ivASI);
 
         ivHSI.setOnClickListener(e -> resetAttitude());
 
@@ -123,6 +124,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         btnShowInfo.setOnClickListener(
                 e -> runOnUiThread(() -> isTvInfoShow = !isTvInfoShow));
+
+        ivAsi.setOnClickListener(
+                e -> {
+                    if (!isGpsSpdOn) {
+                        speedMps = 0.0f;
+                    }
+                }
+        );
 
         if (ActivityCompat.checkSelfPermission(
                 this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -344,8 +353,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void updateAltitudeAndSpeedDisplay() {
         altMeters = locationHelper.getLocation().getAltitude();
-        
-        if(isGpsSpdOn){
+
+        if (isGpsSpdOn) {
             float currentGpsSpeedMps = locationHelper.getLocation().getSpeed();
 
             if (Math.abs(currentGpsSpeedMps - previousGpsSpeedMps) > 1e-3) {
