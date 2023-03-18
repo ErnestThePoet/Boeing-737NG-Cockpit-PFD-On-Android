@@ -35,7 +35,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private final Matrix ASIMatrix = new Matrix();
 
     private AttSource attSource = AttSource.GYRO;
-    private boolean isIrsSpd = false;
+    private boolean isGpsSpdOn = false;
+    private boolean isIrsSpdOn = false;
 
     private boolean isAccFirstUpdate = true;
     private boolean isGyroFirstUpdate = true;
@@ -87,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         tvInfo = findViewById(R.id.tvInfo);
 
         SwitchCompat swAttSource = findViewById(R.id.swAttSource);
+        SwitchCompat swGpsSpd = findViewById(R.id.swGpsSpd);
         SwitchCompat swIrsSpd = findViewById(R.id.swIrsSpd);
         Button btnResetAtt = findViewById(R.id.btnShowInfo);
 
@@ -106,9 +108,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     }
                 });
 
+        swGpsSpd.setOnCheckedChangeListener(
+                (e, c) -> {
+                    isGpsSpdOn = c;
+                });
+
         swIrsSpd.setOnCheckedChangeListener(
                 (e, c) -> {
-                    isIrsSpd = c;
+                    isIrsSpdOn = c;
                     if (!c) {
                         isAccFirstUpdate = true;
                     }
@@ -198,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     0,
                     accelerometerReading.length);
 
-            if (isIrsSpd) {
+            if (isIrsSpdOn) {
                 long currentTimeAccNs = System.nanoTime();
 
                 if (isAccFirstUpdate) {
@@ -337,11 +344,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private void updateAltitudeAndSpeedDisplay() {
         altMeters = locationHelper.getLocation().getAltitude();
-        float currentGpsSpeedMps = locationHelper.getLocation().getSpeed();
+        
+        if(isGpsSpdOn){
+            float currentGpsSpeedMps = locationHelper.getLocation().getSpeed();
 
-        if (Math.abs(currentGpsSpeedMps - previousGpsSpeedMps) > 1e-3) {
-            speedMps = currentGpsSpeedMps;
-            previousGpsSpeedMps = currentGpsSpeedMps;
+            if (Math.abs(currentGpsSpeedMps - previousGpsSpeedMps) > 1e-3) {
+                speedMps = currentGpsSpeedMps;
+                previousGpsSpeedMps = currentGpsSpeedMps;
+            }
         }
 
         tvCurrentAlt.setText(String.valueOf(Math.round(3.28084 * altMeters)));
